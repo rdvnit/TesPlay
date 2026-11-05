@@ -1,5 +1,4 @@
-# The legacy Compose project/volume name preserves existing installations.
-name: aperture
+name: tesplay
 
 services:
   app:
@@ -89,4 +88,5 @@ services:
 
 volumes:
   aperture-data:
+    # Keep the existing database and encryption key when the project is renamed.
     name: ${DATA_VOLUME_NAME:-aperture-data}

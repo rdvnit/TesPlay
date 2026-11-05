@@ -32,6 +32,17 @@ Cloudflare Tunnel and Access are optional. Use your chosen HTTPS reverse proxy o
 
 No credentials are present in `.env.example`. Enter provider credentials through the protected app, not in frontend source files.
 
+## Upgrading from the `aperture` Compose project
+
+TesPlay 0.2.2 uses the `tesplay` Compose project name. Back up the database and encryption key, then run these commands from the updated TesPlay directory with your existing environment settings:
+
+```sh
+docker compose -p aperture --profile youtube --profile tunnel down
+docker compose up -d --build app
+```
+
+Use the same `--env-file` on both commands if your installation uses a custom environment file. If `COMPOSE_PROJECT_NAME` is set, update it to `tesplay` before starting the new containers. Include `--profile youtube` or `--profile tunnel` on `docker compose up` for each optional service you use and omit the `app` service argument to start them alongside it. Keep the same `DATA_VOLUME_NAME` if you configured one. Compose reuses the existing named volume, which defaults to `aperture-data`.
+
 ## Reconnect expired YouTube authorization
 
 If Google expires or revokes the saved authorization, subscriptions, playlists and the personal feed require another Google sign-in. TesPlay reports this as HTTP 409 with a reconnect message; it is not a resolver or server outage. Open **Connections**, find the existing YouTube connection, and choose **Reconnect Google**. Keep the existing connection so its starred channels, watch playlist and history continue to use the same ID. If the message instead identifies invalid OAuth client settings, correct the client ID and secret there before reconnecting.

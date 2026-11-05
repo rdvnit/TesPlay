@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-11-05
+
+- Watch History opens with the 20 most recent titles and shows 20 more at a time.
+- Docker Compose groups the services under `tesplay` and reuses the existing named data volume.
+
 ## 0.2.0 — 2026-11-04
 
 Initial versioned source release of TesPlay, a self-hosted media hub for the Tesla browser.
