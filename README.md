@@ -256,6 +256,8 @@ node --env-file=.env scripts/backup.mjs ./data ./backups
 
 An environment-supplied `ENCRYPTION_KEY` must also be retained; the backup helper records it privately. See [Docker backup and restore](docs/deployment.md#backups-and-moving-hosts) for container commands.
 
+If your Docker installation uses the `aperture` project, follow the [Compose migration steps](docs/deployment.md#upgrading-from-the-aperture-compose-project) after pulling the update and before starting the new containers.
+
 To update an installation after making a backup:
 
 ```sh
