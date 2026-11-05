@@ -54,6 +54,7 @@ const LibraryBrowser = lazy(() => import("./LibraryBrowser"));
 const GlobalSearch=lazy(()=>import("./GlobalSearch"));
 
 const SettingsDashboard = lazy(() => import("./SettingsDashboard"));
+const HISTORY_PAGE_SIZE = 20;
 type View =
   | "home"
   | "live"
@@ -106,6 +107,7 @@ export default function App() {
       null,
     ),
     [kind, setKind] = useState("all");
+  const [historyLimit, setHistoryLimit] = useState(HISTORY_PAGE_SIZE);
   const [search, setSearch] = useState(""),
     [query, setQuery] = useState(""),
     [searchOpen, setSearchOpen] = useState(false),
@@ -169,6 +171,11 @@ export default function App() {
     onToast: showToast,
   });
   const library = useMemo(() => filterLibraryForYouTubeVisibility(rawLibrary, hideYouTubeShorts, connections), [rawLibrary, hideYouTubeShorts, connections]);
+  useEffect(() => {
+    setHistoryLimit(HISTORY_PAGE_SIZE);
+  }, [view, libraryIdentity]);
+  const historyTotal = library.progress.length;
+  const historyShown = Math.min(historyLimit, historyTotal);
   const playerProfileId = playerIdentity?.profileId || null;
   const favorites = useMemo(
     () => new Set([...library.favorites,...(library.queue||[])].map(itemKey)),
@@ -696,42 +703,41 @@ export default function App() {
                   saved progress.
                 </p>
               </div>
-              <span className="count-pill">
-                {library.progress.length} titles
+              <span className="count-pill" aria-live="polite">
+                {historyShown < historyTotal ? `${historyShown} of ` : ""}
+                {historyTotal} {historyTotal === 1 ? "title" : "titles"}
               </span>
             </div>
             {library.plexNotes?.map(note=><p className="form-help" role="status" key={note}>{note}</p>)}
             <button className="text-button" onClick={()=>void loadLibrary().catch(e=>showToast(errorMessage(e)))}><RefreshCw size={16}/>Refresh Plex history and progress</button>
-            {library.progress.length ? (
-              <div className="catalog-grid">
-                {library.progress
-                  .filter((p) => filter([p.item]).length > 0)
-                  .map((entry) => (
-                    <div key={itemKey(entry.item)}>
-                      <Card
-                        item={entry.item}
-                        onOpen={open}
-                        onFavorite={favorite}
-                        saved={favorites.has(itemKey(entry.item))}
-                        progress={progressFor(entry.item)}
-                      />
-                      <div className="history-meta">
-                        <span>
-                          {entry.duration > 0
-                            ? entry.seconds / entry.duration >= 0.97
-                              ? "Finished"
-                              : `${Math.floor(entry.seconds / 60)} of ${Math.ceil(entry.duration / 60)} min`
-                            : "Recently played"}
-                        </span>
-                        <time dateTime={entry.updatedAt}>
-                          {new Date(entry.updatedAt).toLocaleDateString(
-                            undefined,
-                            { month: "short", day: "numeric" },
-                          )}
-                        </time>
-                      </div>
+            {historyTotal ? (
+              <div className="catalog-grid" id="watch-history-grid">
+                {library.progress.slice(0, historyLimit).map((entry) => (
+                  <div key={itemKey(entry.item)}>
+                    <Card
+                      item={entry.item}
+                      onOpen={open}
+                      onFavorite={favorite}
+                      saved={favorites.has(itemKey(entry.item))}
+                      progress={entry.duration > 0 ? (entry.seconds / entry.duration) * 100 : undefined}
+                    />
+                    <div className="history-meta">
+                      <span>
+                        {entry.duration > 0
+                          ? entry.seconds / entry.duration >= 0.97
+                            ? "Finished"
+                            : `${Math.floor(entry.seconds / 60)} of ${Math.ceil(entry.duration / 60)} min`
+                          : "Recently played"}
+                      </span>
+                      <time dateTime={entry.updatedAt}>
+                        {new Date(entry.updatedAt).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric" },
+                        )}
+                      </time>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
             ) : (
               <Empty
@@ -753,6 +759,17 @@ export default function App() {
                 Titles appear here when you start watching. Your place is saved
                 automatically.
               </Empty>
+            )}
+            {historyShown < historyTotal && (
+              <div className="pagination">
+                <button
+                  className="button ghost"
+                  aria-controls="watch-history-grid"
+                  onClick={() => setHistoryLimit(limit => limit + HISTORY_PAGE_SIZE)}
+                >
+                  Show {Math.min(HISTORY_PAGE_SIZE, historyTotal - historyShown)} more
+                </button>
+              </div>
             )}
           </section>
         )}
